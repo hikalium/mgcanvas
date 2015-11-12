@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=9">
+<meta charset="UTF-8">
+<meta name="viewport" content="user-scalable=no">
+<title>Mind Graph Canvas</title>
+<script src="http://use.edgefonts.net/source-code-pro.js"></script>
+
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<link href="./css/mgcanvas.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="./mgcanvas.min.js" charset="UTF-8"></script>
+<script type="text/javascript">
+
+var mgc;
+var mgdb;
+onload = function() {
+	var f = function(a){ return document.getElementById(a); };
+	// init MGCanvas
+	mgdb = new MGDatabase();
+	mgc = new MGCanvas(mgdb, f("mainCanvas"), true);
+	// for full screen
+	var div_canvas = document.getElementById('canvaswrapper');
+	var resizef = function(){
+		mgc.resizeTo(div_canvas.clientWidth, div_canvas.clientHeight);
+	};
+	addEvent(window, "resize", resizef);
+	resizef();
+	//
+	mgdb.addAtom("A");
+	mgdb.addAtom("B");
+	mgdb.addAtom("C");
+	mgdb.addAtom("D");
+	mgdb.addAtom("E");
+	mgdb.addAtom("F");
+	mgdb.addAtom("G");
+	mgdb.addAtom("H");
+}
+
+function addNode(){
+	var eid = mgdb.addAtom();
+	for(var i = 0; i < mgc.nodeSelectionList.length; i++){
+		mgdb.addRelation(UUID.nullUUID, [eid, mgc.nodeSelectionList[i].elementID]);
+	}
+}
+
+</script>
+</head>
+<body ontouchmove="event.preventDefault()">
+<div class="navbar navbar-fixed-top" role="navigation">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<a class="navbar-brand" href="#">MindGraphCanvas <small>by hikalium</small></a>
+		</div>
+		<div>
+			<form class="navbar-form navbar-left" role="search" onsubmit="return false;">
+				<input type="text" class="form-control" placeholder="Search Node or Edge">
+				<button class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Search</button>
+			</form>
+			<button class="btn btn-default navbar-btn" onclick="mgc.zoomIn();"><span class="glyphicon glyphicon-zoom-in"></span></button>
+			<button class="btn btn-default navbar-btn" onclick="mgc.zoomOut();"><span class="glyphicon glyphicon-zoom-out"></span></button>
+			<button class="btn btn-default navbar-btn" onclick="mgc.bringToCenter();"><span class="glyphicon glyphicon-screenshot"></span></button>
+			<button class="btn btn-default navbar-btn" onclick="mgc.isPaused = true;"><span class="glyphicon glyphicon-pause"></span></button>
+			<button class="btn btn-default navbar-btn" onclick="mgc.isPaused = false;"><span class="glyphicon glyphicon-play"></span></button>
+			<button class="btn btn-default navbar-btn" onclick="addNode();"><span class="glyphicon glyphicon-plus"></span></button>
+			<button class="btn btn-default navbar-btn" onclick="mgdb.addAtom();"><span class="glyphicon glyphicon-plus"></span></button>
+		</div>
+	</div>
+</div>
+
+<div id="canvaswrapper">
+	<canvas id="mainCanvas"></canvas>
+</div>
+
+</body>
+</html>
