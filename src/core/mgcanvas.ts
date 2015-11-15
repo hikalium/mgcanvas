@@ -36,17 +36,19 @@ class MGCanvas
 	positionOffset: Vector2D;
 	displayRect: Rectangle2D;
 	regulationList: Array<Function> = new Array();
+	UIManager: CanvasUIManager;
 	/*
 		function(eventID, [args])
 		NodeSelectionChanged			function(1, [newNodeInstance, nodeSelectionList]){};
 		EdgeSelectionChanged			function(2, [newEdgeInstance, edgeSelectionList]){};
 	*/
 	//
-	constructor(db: any, canvasDOMObj: any, GUIControlEnabled: boolean){
+	constructor(db: MGDatabase, canvasDOMObj: HTMLCanvasElement, GUIControlEnabled: boolean){
 		var that = this;
 		var f: EventListener;
 		//
 		this.initGraphicContext(canvasDOMObj);
+		this.UIManager = new CanvasUIManager(this.context);
 		//
 		this.tickTimer = window.setInterval(function(){ that.tick(); }, 1000 / this.tickPerSecond);
 		//
@@ -78,6 +80,8 @@ class MGCanvas
 					node = that.getNodeAtPoint(pGraph);
 					if(node){
 						that.grabbedNode = node;
+					} else{
+						that.UIManager.mouseDown(pGraph);
 					}
 				}
 			};
@@ -120,7 +124,7 @@ class MGCanvas
 			if(window.TouchEvent && window.addEventListener){
 				this.canvas.addEventListener("touchmove", f, false);
 			}
-			/* up */ 
+			/* up */
 			f = function (e: any){
 				that.isMouseDown = false;
 				that.grabbedNode = null;
@@ -205,13 +209,13 @@ class MGCanvas
 		var p = gArray[0];
 		var tnl = new Array();
 		var n = function(contents){ return tnl.includes(contents, function(a, b){ return (a.contents == b); }); };
-		
+
 		for(var i = 0, iLen = p.length; i < iLen; i++){
 			var node = new MGNode(p[i]);
 			this.addNode(node);
 			tnl.push(node);
 		}
-		
+
 		p = gArray[1];
 		for(var i = 0, iLen = p.length; i < iLen; i++){
 			this.addEdge(new MGEdge(n(p[i][0]).nodeid, n(p[i][1]).nodeid));
@@ -246,57 +250,6 @@ class MGCanvas
 	//
 	// add / update / remove
 	//
-	/*
-	updateNode(node, contents){
-		if(!(node instanceof MGNode)){
-			console.log("Invalid node.");
-			return;
-		}
-		node.contents = contents;
-		this.needsRefreshObjectData = true;
-	}
-	*/
-	/*
-	removeNode(node){
-		if(node instanceof MGNode){
-			this.selectSub_setSelectionState(node, false, this.nodeSelectionList, this.eventHandeler);
-			this.nodeList.removeAnObject(node);
-			node.env = null;
-			if(node.detach){
-				node.detach(this);
-			}
-			//
-			var a = this.getListOfEdgeConnectedWithNodeID(node.nodeid);
-			for(var i = 0; i < a.length; i++){
-				a[i][0].updateConnection(a[i][0].nodeid0, a[i][0].nodeid1);
-			}
-			//
-			this.needsRefreshObjectData = true;
-		} else{
-			console.log("Invalid node.")
-		}
-	}
-	*/
-	/*
-	updateEdge(edge: MGEdge, nodeid0, nodeid1, edgetypeid){
-		edge.updateAttribute(nodeid0, nodeid1, edgetypeid);
-	}
-	*/
-	/*
-	removeEdge(edge){
-		if(edge instanceof MGEdge){
-			this.selectSub_setSelectionState(edge, false, this.edgeSelectionList, this.eventHandeler);
-			this.edgeList.removeAnObject(edge);
-			edge.env = null;
-			if(edge.detach){
-				edge.detach(this);
-			}
-			this.needsRefreshObjectData = true;
-		} else{
-			console.log("Invalid edge.")
-		}
-	}
-	*/
 	addRegulation(f: Function){
 		if(f instanceof Function){
 			this.regulationList.push(f);
@@ -304,54 +257,6 @@ class MGCanvas
 			console.log("Invalid regulation.")
 		}
 	}
-	//
-	// search / get
-	//
-	/*
-	getNodeByID(nodeid){
-		if(nodeid == UUID.nullUUID){
-			return false;
-		}
-		return this.nodeList.includes(nodeid, function(aobj, nid){
-			return (aobj.nodeid === nid);
-		});
-	}
-	getNodeByContents(nodecontents){
-		return this.nodeList.includes(nodecontents, function(aobj, nc){
-			return (aobj.contents === nc);
-		});
-	}
-	getEdgeByID(edgeid){
-		if(edgeid == UUID.nullUUID){
-			return false;
-		}
-		return this.edgeList.includes(edgeid, function(aobj, eid){
-			return (aobj.edgeid === eid);
-		});
-	}
-	*/
-	/*
-	getListOfEdgeConnectedWithNodeID(nodeid: string){
-		// [[edge, theOtherNode], ...]
-		var a;
-		var retv: Array<>;
-		if(nodeid == UUID.nullUUID){
-			return new Array();
-		}
-		retv = new Array();
-		a = this.edgeList.getAllMatched(nodeid, function(aobj: MGEdge, nid: string){
-			return (aobj.nodeid0 === nid || aobj.nodeid1 === nid);
-		});
-		for(var i = 0; i < a.length; i++){
-			if(a[i].nodeid0 === nodeid){
-				retv.push([a[i], a[i].node1])
-			} else{
-				retv.push([a[i], a[i].node0])
-			}
-		}
-		return retv;
-	}
-	*/
 	//
 	// Other functions
 	//
@@ -366,10 +271,10 @@ class MGCanvas
 		}
 		g.x /= p.length;
 		g.y /= p.length;
-		
+
 		this.positionOffset.x = -g.x;
 		this.positionOffset.y = -g.y;
-		
+
 		this.isEnabledAutomaticTracking = true;
 	}
 	zoomIn(){
@@ -406,11 +311,11 @@ class MGCanvas
 		g.y /= p.length;
 		g.x += this.positionOffset.x;
 		g.y += this.positionOffset.y;
-		if(	g.x < this.displayRect.origin.x / 2 || 
-			g.x > -this.displayRect.origin.x / 2 || 
-			g.y < this.displayRect.origin.y / 2 || 
+		if(	g.x < this.displayRect.origin.x / 2 ||
+			g.x > -this.displayRect.origin.x / 2 ||
+			g.y < this.displayRect.origin.y / 2 ||
 			g.y > -this.displayRect.origin.x / 2){
-			
+
 			this.positionOffset.x += -g.x;
 			this.positionOffset.y += -g.y;
 		}
@@ -419,16 +324,16 @@ class MGCanvas
 		var p: any;
 		var i: number, iLen: number;
 		var dr: Rectangle2D;
-		
+
 		this.tickCount++;
-		
+
 		//
 		// AutomaticTracking
 		//
 		if(this.isEnabledAutomaticTracking && (this.tickCount % 30 == 0)){
 			this.bringInScreen();
 		}
-		
+
 		//
 		// grabbedNode
 		//
@@ -437,9 +342,9 @@ class MGCanvas
 			this.grabbedNode.position.x = p.x;
 			this.grabbedNode.position.y = p.y;
 		}
-		
+
 		//
-		// Node and Edge 
+		// Node and Edge
 		//
 		if(!this.isPaused){
 			//
@@ -449,25 +354,26 @@ class MGCanvas
 			for(i = 0, iLen = p.length; i < iLen; i++){
 				p[i].tick();
 			}
-			// 
+			//
 			this.needsRefreshObjectData = false;
 		}
-		
+
 		//
 		// Refresh
 		//
 		dr = this.displayRect;
-		
+
 		this.context.scale(1 / this.currentScale, 1 / this.currentScale);
 		this.context.clearRect(dr.origin.x, dr.origin.y, dr.size.x, dr.size.y);
 		this.context.scale(this.currentScale, this.currentScale);
-		
+
 		this.context.translate(this.positionOffset.x, this.positionOffset.y);
 		//
 		p = this.db.elementList;
 		for(i = 0, iLen = p.length; i < iLen; i++){
 			p[i].draw();
 		}
+		this.UIManager.tick();
 		//
 		this.context.translate(-this.positionOffset.x, -this.positionOffset.y);
 	}
@@ -515,11 +421,11 @@ class MGCanvas
 		// スケール変換
 		p.x /= this.currentScale;
 		p.y /= this.currentScale;
-		
+
 		// オフセット平行移動
 		p.x -= this.positionOffset.x;
 		p.y -= this.positionOffset.y;
-		
+
 		return p;
 	}
 	convertPointToCanvasLayerFromGraphLayerP(pGraph: Vector2D): Vector2D
@@ -534,7 +440,7 @@ class MGCanvas
 		// Canvasの中心が原点
 		p.x += this.canvas.width / 2;
 		p.y += this.canvas.height / 2;
-		
+
 		return p;
 	}
 	getNodeAtPoint(p: Vector2D): any
@@ -553,7 +459,7 @@ class MGCanvas
 	{
 		/*
 		var r = new Rectangle(p.x - 10, p.y - 10, 20, 20);
-		
+
 		var el = this.edgeList;
 		for(var i = 0, iLen = el.length; i < iLen; i++){
 			if(r.includesPoint(el[i].position)){
@@ -612,7 +518,7 @@ class MGCanvas
 		this.context.translate(w, h);
 		// スケール変換を再設定
 		this.context.scale(this.currentScale, this.currentScale);
-		
+
 		return 0;
 	}
 }

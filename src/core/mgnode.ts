@@ -28,8 +28,9 @@ class MGNode extends MGDatabaseAtomElement implements MGGraphElement
 	edgeCache: Array<any>			= new Array();
 	needsUpdateEdgeCache: boolean	= false;
 	//
-	contextMenuRect: Rectangle2D		= new Rectangle2D(0, 0, 200, 100);
-	contextMenuOpened: boolean		= false;
+	contextMenu: CanvasUISheet;
+	//contextMenuRect: Rectangle2D		= new Rectangle2D(0, 0, 200, 100);
+	//contextMenuOpened: boolean		= false;
 	//
 	env: MGCanvas;
 	//
@@ -71,9 +72,6 @@ class MGNode extends MGDatabaseAtomElement implements MGGraphElement
 		
 		// context menu
 		this.updateContextMenu();
-		if(this.contextMenuOpened){
-			this.drawContextMenu();
-		}
 	}
 	tick()
 	{
@@ -109,9 +107,6 @@ class MGNode extends MGDatabaseAtomElement implements MGGraphElement
 		} else{
 			this.velocity.setComponent(0, 0);
 		}
-		
-		// context menu
-		//this.updateContextMenu();
 	}
 	tick_elementRepulsion()
 	{
@@ -159,46 +154,30 @@ class MGNode extends MGDatabaseAtomElement implements MGGraphElement
 	}
 	openContextMenu()
 	{
-		this.contextMenuOpened = true;
-	/*
-		var elem: HTMLElement;
-		var p: Vector2D;
-		var htmlStr: string = "";
 		var that = this;
-		if(!this.contextMenuDOM){
-			this.contextMenuDOM = document.createElement("div");
-			this.contextMenuDOM.style.position = "absolute";
-			this.contextMenuDOM.style.backgroundColor = "rgba(172, 212, 256, 0.8)";
-			this.contextMenuDOM.onmousemove = function(e){ e.preventDefault(); return false; };
-			// closeButton
-			elem = document.createElement("span");
-			elem.setAttribute("aria-hidden", "true");
-			elem.setAttribute("class", "glyphicon glyphicon-remove pull-right");
-			elem.setAttribute("style", "font-size: 1.5em;");
-			elem.onclick = function(){ document.body.removeChild(that.contextMenuDOM); that.contextMenuDOM = null; };
-			this.contextMenuDOM.appendChild(elem);
-			// body
-			elem = document.createElement("div");
-			htmlStr += "<h2>Node</h2>";
-			htmlStr += "<p>ID: " + this.elementID + "</p>";
-			htmlStr += "<p>ID: " + UUID.getBase64EncodedUUID(this.elementID) + "</p>";
-			elem.innerHTML = htmlStr;
-			this.contextMenuDOM.appendChild(elem);
-			//
-			document.body.appendChild(this.contextMenuDOM);
-			p = this.env.convertPointToCanvasLayerFromGraphLayerP(this.position);
-			this.updateContextMenu();
+		if(!this.contextMenu){
+			this.contextMenu = new CanvasUISheet(0, 0, 200, 100);
+			this.env.UIManager.addChild(this.contextMenu);
+			this.contextMenu.addChild(new CanvasUIButton("Close", 0, 0, 0, 0, function(){
+				that.env.UIManager.removeChild(that.contextMenu);
+				that.contextMenu = null;
+			}));
 		}
-		*/
 	}
 	updateContextMenu()
 	{
 		var p: Vector2D;
+		//
+		if(!this.contextMenu){
+			return;
+		}
+		//
 		p = this.env.convertPointToCanvasLayerFromGraphLayerP(this.position);
 		//
-		this.contextMenuRect.origin.x = this.position.x;
-		this.contextMenuRect.origin.y = this.position.y;
+		this.contextMenu.origin.x = this.position.x;
+		this.contextMenu.origin.y = this.position.y;
 	}
+	/*
 	drawContextMenu()
 	{
 		var ctx: CanvasRenderingContext2D = this.env.context;
@@ -216,4 +195,5 @@ class MGNode extends MGDatabaseAtomElement implements MGGraphElement
 		ctx.font = "normal 32px 'Source Code Pro', source-code-pro";
 		ctx.MGC_drawText("Node", x + this.size, y + this.size);
 	}
+	*/
 }

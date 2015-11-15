@@ -647,6 +647,7 @@ var MGCanvas = (function () {
         var f;
         //
         this.initGraphicContext(canvasDOMObj);
+        this.UIManager = new CanvasUIManager(this.context);
         //
         this.tickTimer = window.setInterval(function () { that.tick(); }, 1000 / this.tickPerSecond);
         //
@@ -678,6 +679,9 @@ var MGCanvas = (function () {
                     node = that.getNodeAtPoint(pGraph);
                     if (node) {
                         that.grabbedNode = node;
+                    }
+                    else {
+                        that.UIManager.mouseDown(pGraph);
                     }
                 }
             };
@@ -755,13 +759,13 @@ var MGCanvas = (function () {
         var p = gArray[0];
         var tnl = new Array();
         var n = function(contents){ return tnl.includes(contents, function(a, b){ return (a.contents == b); }); };
-        
+
         for(var i = 0, iLen = p.length; i < iLen; i++){
             var node = new MGNode(p[i]);
             this.addNode(node);
             tnl.push(node);
         }
-        
+
         p = gArray[1];
         for(var i = 0, iLen = p.length; i < iLen; i++){
             this.addEdge(new MGEdge(n(p[i][0]).nodeid, n(p[i][1]).nodeid));
@@ -796,57 +800,6 @@ var MGCanvas = (function () {
     //
     // add / update / remove
     //
-    /*
-    updateNode(node, contents){
-        if(!(node instanceof MGNode)){
-            console.log("Invalid node.");
-            return;
-        }
-        node.contents = contents;
-        this.needsRefreshObjectData = true;
-    }
-    */
-    /*
-    removeNode(node){
-        if(node instanceof MGNode){
-            this.selectSub_setSelectionState(node, false, this.nodeSelectionList, this.eventHandeler);
-            this.nodeList.removeAnObject(node);
-            node.env = null;
-            if(node.detach){
-                node.detach(this);
-            }
-            //
-            var a = this.getListOfEdgeConnectedWithNodeID(node.nodeid);
-            for(var i = 0; i < a.length; i++){
-                a[i][0].updateConnection(a[i][0].nodeid0, a[i][0].nodeid1);
-            }
-            //
-            this.needsRefreshObjectData = true;
-        } else{
-            console.log("Invalid node.")
-        }
-    }
-    */
-    /*
-    updateEdge(edge: MGEdge, nodeid0, nodeid1, edgetypeid){
-        edge.updateAttribute(nodeid0, nodeid1, edgetypeid);
-    }
-    */
-    /*
-    removeEdge(edge){
-        if(edge instanceof MGEdge){
-            this.selectSub_setSelectionState(edge, false, this.edgeSelectionList, this.eventHandeler);
-            this.edgeList.removeAnObject(edge);
-            edge.env = null;
-            if(edge.detach){
-                edge.detach(this);
-            }
-            this.needsRefreshObjectData = true;
-        } else{
-            console.log("Invalid edge.")
-        }
-    }
-    */
     MGCanvas.prototype.addRegulation = function (f) {
         if (f instanceof Function) {
             this.regulationList.push(f);
@@ -855,54 +808,6 @@ var MGCanvas = (function () {
             console.log("Invalid regulation.");
         }
     };
-    //
-    // search / get
-    //
-    /*
-    getNodeByID(nodeid){
-        if(nodeid == UUID.nullUUID){
-            return false;
-        }
-        return this.nodeList.includes(nodeid, function(aobj, nid){
-            return (aobj.nodeid === nid);
-        });
-    }
-    getNodeByContents(nodecontents){
-        return this.nodeList.includes(nodecontents, function(aobj, nc){
-            return (aobj.contents === nc);
-        });
-    }
-    getEdgeByID(edgeid){
-        if(edgeid == UUID.nullUUID){
-            return false;
-        }
-        return this.edgeList.includes(edgeid, function(aobj, eid){
-            return (aobj.edgeid === eid);
-        });
-    }
-    */
-    /*
-    getListOfEdgeConnectedWithNodeID(nodeid: string){
-        // [[edge, theOtherNode], ...]
-        var a;
-        var retv: Array<>;
-        if(nodeid == UUID.nullUUID){
-            return new Array();
-        }
-        retv = new Array();
-        a = this.edgeList.getAllMatched(nodeid, function(aobj: MGEdge, nid: string){
-            return (aobj.nodeid0 === nid || aobj.nodeid1 === nid);
-        });
-        for(var i = 0; i < a.length; i++){
-            if(a[i].nodeid0 === nodeid){
-                retv.push([a[i], a[i].node1])
-            } else{
-                retv.push([a[i], a[i].node0])
-            }
-        }
-        return retv;
-    }
-    */
     //
     // Other functions
     //
@@ -983,7 +888,7 @@ var MGCanvas = (function () {
             this.grabbedNode.position.y = p.y;
         }
         //
-        // Node and Edge 
+        // Node and Edge
         //
         if (!this.isPaused) {
             //
@@ -993,7 +898,7 @@ var MGCanvas = (function () {
             for (i = 0, iLen = p.length; i < iLen; i++) {
                 p[i].tick();
             }
-            // 
+            //
             this.needsRefreshObjectData = false;
         }
         //
@@ -1009,6 +914,7 @@ var MGCanvas = (function () {
         for (i = 0, iLen = p.length; i < iLen; i++) {
             p[i].draw();
         }
+        this.UIManager.tick();
         //
         this.context.translate(-this.positionOffset.x, -this.positionOffset.y);
     };
@@ -1087,7 +993,7 @@ var MGCanvas = (function () {
     MGCanvas.prototype.getEdgeAtPoint = function (p) {
         /*
         var r = new Rectangle(p.x - 10, p.y - 10, 20, 20);
-        
+
         var el = this.edgeList;
         for(var i = 0, iLen = el.length; i < iLen; i++){
             if(r.includesPoint(el[i].position)){
@@ -1706,9 +1612,6 @@ var MGNode = (function (_super) {
         this.isSelected = false;
         this.edgeCache = new Array();
         this.needsUpdateEdgeCache = false;
-        //
-        this.contextMenuRect = new Rectangle2D(0, 0, 200, 100);
-        this.contextMenuOpened = false;
         // Kinetic attributes
         this.position = new Vector2D(Math.random() * 64 - 32, Math.random() * 64 - 32);
         this.velocity = new Vector2D(Math.random() * 2 - 1, Math.random() * 2 - 1);
@@ -1742,9 +1645,6 @@ var MGNode = (function (_super) {
         ctx.MGC_drawArrowLine(this.position, pTo);
         // context menu
         this.updateContextMenu();
-        if (this.contextMenuOpened) {
-            this.drawContextMenu();
-        }
     };
     MGNode.prototype.tick = function () {
         var u;
@@ -1779,8 +1679,6 @@ var MGNode = (function (_super) {
         else {
             this.velocity.setComponent(0, 0);
         }
-        // context menu
-        //this.updateContextMenu();
     };
     MGNode.prototype.tick_elementRepulsion = function () {
         // 距離の近いElement同士には斥力が働くとする。
@@ -1824,59 +1722,27 @@ var MGNode = (function (_super) {
         this.copyFrom(e);
     };
     MGNode.prototype.openContextMenu = function () {
-        this.contextMenuOpened = true;
-        /*
-            var elem: HTMLElement;
-            var p: Vector2D;
-            var htmlStr: string = "";
-            var that = this;
-            if(!this.contextMenuDOM){
-                this.contextMenuDOM = document.createElement("div");
-                this.contextMenuDOM.style.position = "absolute";
-                this.contextMenuDOM.style.backgroundColor = "rgba(172, 212, 256, 0.8)";
-                this.contextMenuDOM.onmousemove = function(e){ e.preventDefault(); return false; };
-                // closeButton
-                elem = document.createElement("span");
-                elem.setAttribute("aria-hidden", "true");
-                elem.setAttribute("class", "glyphicon glyphicon-remove pull-right");
-                elem.setAttribute("style", "font-size: 1.5em;");
-                elem.onclick = function(){ document.body.removeChild(that.contextMenuDOM); that.contextMenuDOM = null; };
-                this.contextMenuDOM.appendChild(elem);
-                // body
-                elem = document.createElement("div");
-                htmlStr += "<h2>Node</h2>";
-                htmlStr += "<p>ID: " + this.elementID + "</p>";
-                htmlStr += "<p>ID: " + UUID.getBase64EncodedUUID(this.elementID) + "</p>";
-                elem.innerHTML = htmlStr;
-                this.contextMenuDOM.appendChild(elem);
-                //
-                document.body.appendChild(this.contextMenuDOM);
-                p = this.env.convertPointToCanvasLayerFromGraphLayerP(this.position);
-                this.updateContextMenu();
-            }
-            */
+        var that = this;
+        if (!this.contextMenu) {
+            this.contextMenu = new CanvasUISheet(0, 0, 200, 100);
+            this.env.UIManager.addChild(this.contextMenu);
+            this.contextMenu.addChild(new CanvasUIButton("Close", 0, 0, 0, 0, function () {
+                that.env.UIManager.removeChild(that.contextMenu);
+                that.contextMenu = null;
+            }));
+        }
     };
     MGNode.prototype.updateContextMenu = function () {
         var p;
+        //
+        if (!this.contextMenu) {
+            return;
+        }
+        //
         p = this.env.convertPointToCanvasLayerFromGraphLayerP(this.position);
         //
-        this.contextMenuRect.origin.x = this.position.x;
-        this.contextMenuRect.origin.y = this.position.y;
-    };
-    MGNode.prototype.drawContextMenu = function () {
-        var ctx = this.env.context;
-        var x = this.contextMenuRect.origin.x;
-        var y = this.contextMenuRect.origin.y;
-        var w = this.contextMenuRect.size.x;
-        var h = this.contextMenuRect.size.y;
-        ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
-        ctx.strokeStyle = "rgba(51, 119, 193, 0.5)";
-        ctx.fillRect(x, y, w, h);
-        ctx.strokeRect(x, y, w, h);
-        //
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.75)";
-        ctx.font = "normal 32px 'Source Code Pro', source-code-pro";
-        ctx.MGC_drawText("Node", x + this.size, y + this.size);
+        this.contextMenu.origin.x = this.position.x;
+        this.contextMenu.origin.y = this.position.y;
     };
     return MGNode;
 })(MGDatabaseAtomElement);
@@ -2160,11 +2026,28 @@ var Vector2D = (function () {
     return Vector2D;
 })();
 var CanvasUIManager = (function () {
-    function CanvasUIManager(canvasDOMObj) {
-        this.sheetRoot = new Array();
-        this.canvas = canvasDOMObj;
-        this.context = this.canvas.getContext('2d');
+    function CanvasUIManager(ctx) {
+        this.children = new Array();
+        this.context = ctx;
     }
+    CanvasUIManager.prototype.tick = function () {
+        for (var i = 0; i < this.children.length; i++) {
+            this.children[i].draw(this.context);
+        }
+    };
+    CanvasUIManager.prototype.addChild = function (s) {
+        this.children.push(s);
+    };
+    CanvasUIManager.prototype.removeChild = function (s) {
+        return this.children.removeAnObject(s);
+    };
+    CanvasUIManager.prototype.mouseDown = function (p) {
+        for (var i = 0; i < this.children.length; i++) {
+            if (this.children[i].includesPoint(p)) {
+                this.children[i].mouseDown(p.getCompositeVector(this.children[i].origin.getInverseVector()));
+            }
+        }
+    };
     return CanvasUIManager;
 })();
 var CanvasUISheet = (function (_super) {
@@ -2172,6 +2055,80 @@ var CanvasUISheet = (function (_super) {
     function CanvasUISheet() {
         _super.apply(this, arguments);
         this.children = new Array();
+        this.backgroundColor = "rgba(255, 255, 255, 0.75)";
+        this.borderColor = "rgba(51, 119, 193, 0.5)";
     }
+    CanvasUISheet.prototype.draw = function (ctx) {
+        var x = this.origin.x;
+        var y = this.origin.y;
+        var w = this.size.x;
+        var h = this.size.y;
+        //
+        ctx.fillStyle = this.backgroundColor;
+        ctx.strokeStyle = this.borderColor;
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeRect(x, y, w, h);
+        //
+        /*
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.75)";
+        ctx.font = "normal 32px 'Source Code Pro', source-code-pro";
+        ctx.MGC_drawText("Node", x + this.size, y + this.size);
+        */
+        ctx.save();
+        ctx.translate(this.origin.x, this.origin.y);
+        for (var i = 0; i < this.children.length; i++) {
+            this.children[i].draw(ctx);
+        }
+        ctx.restore();
+    };
+    CanvasUISheet.prototype.addChild = function (s) {
+        this.children.push(s);
+    };
+    CanvasUISheet.prototype.removeChild = function (s) {
+        return this.children.removeAnObject(s);
+    };
+    CanvasUISheet.prototype.mouseDown = function (p) {
+        for (var i = 0; i < this.children.length; i++) {
+            if (this.children[i].includesPoint(p)) {
+                this.children[i].mouseDown(p.getCompositeVector(this.children[i].origin.getInverseVector()));
+            }
+        }
+    };
     return CanvasUISheet;
 })(Rectangle2D);
+var CanvasUIButton = (function (_super) {
+    __extends(CanvasUIButton, _super);
+    //
+    function CanvasUIButton(s, x, y, w, h, callback) {
+        _super.call(this, x, y, w, h);
+        this.label = "Button";
+        this.fontColor = "rgba(0, 0, 0, 0.75)";
+        this.fontSize = 16;
+        this.font = "'Source Code Pro', source-code-pro";
+        this.label = s;
+        this.callback = callback;
+    }
+    //
+    CanvasUIButton.prototype.draw = function (ctx) {
+        var x = this.origin.x;
+        var y = this.origin.y;
+        var w = this.size.x ? this.size.x : this.size.x = ctx.measureText(this.label).width + 16;
+        var h = this.size.y ? this.size.y : this.size.y = this.fontSize + 4;
+        //
+        ctx.fillStyle = this.backgroundColor;
+        ctx.strokeStyle = this.borderColor;
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeRect(x, y, w, h);
+        //
+        ctx.fillStyle = this.fontColor;
+        ctx.font = this.fontSize + "px " + this.font;
+        ctx.textBaseline = "top";
+        ctx.fillText(this.label, x + 6, y);
+    };
+    CanvasUIButton.prototype.mouseDown = function (p) {
+        if (this.callback instanceof Function) {
+            this.callback(p);
+        }
+    };
+    return CanvasUIButton;
+})(CanvasUISheet);

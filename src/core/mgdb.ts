@@ -11,7 +11,7 @@ class MGDatabase
 	//
 	constructor()
 	{
-	
+
 	}
 	//
 	// Add
@@ -53,7 +53,7 @@ class MGDatabase
 			console.log("addElement: elementID already exists.");
 			return null;
 		}
-		
+
 		if(e instanceof MGDatabaseAtomElement){
 			this.atomList.push(e);
 			if(this.eventHandler_atomAdded){
@@ -69,11 +69,11 @@ class MGDatabase
 			return null;
 		}
 		this.elementList.push(e);
-		
+
 		//console.log("Element added.");
 		//console.log(e.getStringRepresentation());
 		// console.log(mgdb);
-		
+
 		return e.elementID;
 	}
 	addElementFromStringRepresentation(str: string)
@@ -339,7 +339,7 @@ class MGDatabaseQuery
 	private nextIndex: number = 0;
 	private hasReachedEnd: boolean = false;
 	private list: Array<MGDatabaseElement>;
-	
+
 	constructor(db: MGDatabase, domain?: string)
 	{
 		// domainは省略可能で、指定するならばatom, relation, elementsのいずれかである。
