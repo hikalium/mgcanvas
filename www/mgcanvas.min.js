@@ -686,9 +686,6 @@ var MGCanvas = (function () {
                 }
             };
             this.canvas.addEventListener("mousedown", f, false);
-            if (window.TouchEvent && window.addEventListener) {
-                this.canvas.addEventListener("touchstart", f, false);
-            }
             /* right down default prevent */
             f = function (e) {
                 var p = that.getPointerPositionOnElement(e);
@@ -737,6 +734,33 @@ var MGCanvas = (function () {
             this.canvas.addEventListener("mouseup", f, false);
             if (window.TouchEvent && window.addEventListener) {
                 this.canvas.addEventListener("touchend", f, false);
+            }
+            //
+            // Touch
+            //
+            if (window.TouchEvent && window.addEventListener) {
+                f = function (e) {
+                    var node;
+                    var pGraph;
+                    if (e.touches.length === 1) {
+                        // left button
+                        that.lastMousePosition = that.getPointerPositionOnElement(e);
+                        that.mouseDownPosition = that.lastMousePosition;
+                        that.isMouseDown = true;
+                        that.isClick = true;
+                        that.isEnabledAutomaticTracking = false;
+                        //e.preventDefault();
+                        pGraph = that.convertPointToGraphLayerFromCanvasLayerP(that.lastMousePosition);
+                        node = that.getNodeAtPoint(pGraph);
+                        if (node) {
+                            that.grabbedNode = node;
+                        }
+                        else {
+                            that.UIManager.mouseDown(pGraph);
+                        }
+                    }
+                };
+                this.canvas.addEventListener("touchstart", f, false);
             }
         }
     }
@@ -1387,8 +1411,7 @@ var MGDatabaseQuery = (function () {
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var MGEdge = (function (_super) {
     __extends(MGEdge, _super);

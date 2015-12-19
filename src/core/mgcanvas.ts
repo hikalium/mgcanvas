@@ -86,9 +86,6 @@ class MGCanvas
 				}
 			};
 			this.canvas.addEventListener("mousedown", f, false);
-			if(window.TouchEvent && window.addEventListener){
-				this.canvas.addEventListener("touchstart", f, false);
-			}
 			/* right down default prevent */
 			f = function (e: any){
 				var p = that.getPointerPositionOnElement(e);
@@ -140,6 +137,32 @@ class MGCanvas
 			this.canvas.addEventListener("mouseup", f, false);
 			if(window.TouchEvent && window.addEventListener){
 				this.canvas.addEventListener("touchend", f, false);
+			}
+			//
+			// Touch
+			//
+			if(window.TouchEvent && window.addEventListener){
+				f = function (e: any){
+					var node: MGNode;
+					var pGraph: Vector2D;
+					if(e.touches.length === 1){
+						// left button
+						that.lastMousePosition = that.getPointerPositionOnElement(e);
+						that.mouseDownPosition = that.lastMousePosition;
+						that.isMouseDown = true;
+						that.isClick = true;
+						that.isEnabledAutomaticTracking = false;
+						//e.preventDefault();
+						pGraph = that.convertPointToGraphLayerFromCanvasLayerP(that.lastMousePosition);
+						node = that.getNodeAtPoint(pGraph);
+						if(node){
+							that.grabbedNode = node;
+						} else{
+							that.UIManager.mouseDown(pGraph);
+						}
+					}
+				};
+				this.canvas.addEventListener("touchstart", f, false);
 			}
 		}
 	}
