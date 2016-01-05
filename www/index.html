@@ -14,11 +14,13 @@
 
 var mgc;
 var mgdb;
+var mgp;
 onload = function() {
 	var f = function(a){ return document.getElementById(a); };
 	// init MGCanvas
 	mgdb = new MGDatabase();
 	mgc = new MGCanvas(mgdb, f("mainCanvas"), true);
+	mgp = new MGProlog(mgdb);
 	// for full screen
 	var div_canvas = document.getElementById('canvaswrapper');
 	var resizef = function(){
@@ -35,6 +37,34 @@ onload = function() {
 	mgdb.addAtom("F");
 	mgdb.addAtom("G");
 	mgdb.addAtom("H");
+	//
+	var commandBox = document.getElementById("commandBox");
+	commandBox.onkeydown = function(e){
+		// press Enter to send
+		// Shift+Enter for new line
+		if(e.keyCode == 13){ // Enter
+			if(!e.shiftKey){
+				if(commandBox.value.length){
+					if(!this.history){
+						this.history = new Array();
+					}
+					this.history.push(commandBox.value);
+					mgp.exec(commandBox.value);
+				}
+				commandBox.value = '';
+				e.preventDefault();
+			}
+		} else if(e.keyCode == 38){	//Up
+			if(this.history && this.history.length > 0){
+				if(this.historyIndex === undefined || commandBox.value != this.history[this.historyIndex]){
+					this.historyIndex = this.history.length - 1;
+				} else if(this.historyIndex > 0){
+					this.historyIndex--;
+				}
+				commandBox.value = this.history[this.historyIndex];
+			}
+		}
+	}
 }
 
 function addNode(){
@@ -47,6 +77,23 @@ function addNode(){
 function connectNode(){
 	var eidList = mgc.nodeSelectionList.propertiesNamed("elementID");
 	mgdb.addRelation(UUID.nullUUID, eidList);
+}
+
+function updateNode(){
+	var nl = mgc.nodeSelectionList;
+	if(!nl.length){
+		alert("Plese select at least 1 node.");
+		return;
+	}
+	if(nl.length > 1 && !window.confirm('This operation will affect ' + nl.length + 'nodes. Is this ok?')){
+		return;
+	}
+	var retv = window.prompt("Set contents:", "");
+	if(retv && retv.length){
+		for(i = 0; i < nl.length; i++){
+			mgdb.updateAtomElement(nl[i], retv);
+		}
+	}
 }
 
 </script>
@@ -69,12 +116,14 @@ function connectNode(){
 			<button class="btn btn-default navbar-btn" onclick="mgc.isPaused = false;"><span class="glyphicon glyphicon-play"></span></button>
 			<button class="btn btn-default navbar-btn" onclick="addNode();"><span class="glyphicon glyphicon-plus"></span></button>
 			<button class="btn btn-default navbar-btn" onclick="connectNode();"><span class="glyphicon glyphicon-link"></span></button>
+			<button class="btn btn-default navbar-btn" onclick="updateNode();"><span class="glyphicon glyphicon-pencil"></span></button>
 		</div>
 	</div>
 </div>
 
 <div id="canvaswrapper">
 	<canvas id="mainCanvas"></canvas>
+	<textarea id="commandBox" placeholder="Input command here..."></textarea>
 </div>
 
 </body>

@@ -2,7 +2,7 @@
 SRCDIR	= src/
 SRCS	= core/ext.ts core/extcanvas.ts core/mgcanvas.ts core/mgdb.ts \
 			 core/mgedge.ts core/mgnode.ts core/rectangle.ts core/uuid.ts \
-			 core/vector2d.ts core/window.ts core/canvasui.ts
+			 core/vector2d.ts core/window.ts core/canvasui.ts core/mgprolog.ts
 FULLSRCS	= $(addprefix $(SRCDIR),$(SRCS))
 
 default: Makefile

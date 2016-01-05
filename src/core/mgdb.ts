@@ -96,6 +96,13 @@ class MGDatabase
 		}
 	}
 	//
+	//
+	//
+	updateAtomElement(elem: MGDatabaseAtomElement, contents: string)
+	{
+		elem.contents = contents;
+	}
+	//
 	// Search / Get
 	//
 	getElementByID(eid: string)
