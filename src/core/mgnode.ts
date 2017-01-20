@@ -23,10 +23,11 @@ class MGNode extends MGDatabaseAtomElement implements MGGraphElement
 	size: number = 10;		// radius
 	mass: number;
 	frictionFactor: number			= 0.005;
+	//frictionFactor: number			= 0.05;
 	isAnchor: boolean				= false;
 	isSelected: boolean				= false;
 	edgeCache: Array<any>			= new Array();
-	needsUpdateEdgeCache: boolean	= false;
+	needsUpdateEdgeCache: boolean	= true;
 	//
 	contextMenu: CanvasUISheet;
 	//contextMenuRect: Rectangle2D		= new Rectangle2D(0, 0, 200, 100);

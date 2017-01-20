@@ -90,10 +90,9 @@ class MGDatabase
 			// Edge
 			t = new MGDatabaseRelationElement();
 		}
-		if(t){
-			t.loadStringRepresentation(str);
-			this.addElement(t);
-		}
+		if(!t) return null;
+		t.loadStringRepresentation(str);
+		return this.addElement(t);
 	}
 	//
 	//
@@ -108,9 +107,9 @@ class MGDatabase
 	getElementByID(eid: string)
 	{
 		// retv: element instance or false
-		if(eid == UUID.nullUUID){
-			return false;
-		}
+		//if(eid == UUID.nullUUID){
+		//	return false;
+		//}
 		return this.elementList.includes(eid, this.fEqualTo_elementList_elementID);
 	}
 	getElementByContents(contents: string)
@@ -121,9 +120,11 @@ class MGDatabase
 	getListOfRelationConnectedWithElementID(eid: string)
 	{
 		var retv: Array<MGDatabaseRelationElement>;
+		/*
 		if(eid == UUID.nullUUID){
 			return new Array();
 		}
+		*/
 		//
 		retv = this.relationList.getAllMatched(eid, function(r){
 			return r.elementIDList.includes(eid);
@@ -313,6 +314,7 @@ class MGDatabaseRelationElement implements MGDatabaseElement
 			}
 			this.elementIDList[i] = UUID.verifyUUID(str.substr(p, 32 + 4));
 		}
+		console.log("loaded");
 		return this.elementID;
 	}
 	getStringRepresentation(): string

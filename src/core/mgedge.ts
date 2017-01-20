@@ -133,6 +133,7 @@ class MGEdge extends MGDatabaseRelationElement implements MGGraphElement
 	{
 		var cl: number, cf: number, u: Vector2D;
 		//
+		if(!targetElement || !basePos) return;
 		cl = basePos.getVectorTo(targetElement.position).getVectorLength();
 		cf = (this.naturalLength - cl) * this.springRate;
 		u = targetElement.position.getUnitVectorTo(basePos).getAdjustedVector(-cf);
@@ -167,6 +168,7 @@ class MGEdge extends MGDatabaseRelationElement implements MGGraphElement
 			p = n[1].position.getCompositeVector(l.getAdjustedVector(n[1].size));
 			ctx.MGC_drawArrowLine(p, p.getCompositeVector(l));
 		} else if(iLen == 1){
+			if(!n[0])return;
 			l = this.position.getVectorTo(n[0].position);
 			l = l.getAdjustedVector(l.getVectorLength() - n[0].size);
 			p = this.position;

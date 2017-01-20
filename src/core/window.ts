@@ -1,6 +1,6 @@
 interface Window
 {
-	URL: any;
+	//URL: any;
 	webkitURL: any;
 	TouchEvent: any;
 }

@@ -65,6 +65,10 @@ onload = function() {
 			}
 		}
 	}
+	// init D&D
+	var dropZone = commandBox;
+	dropZone.addEventListener('dragover', handleDragOver, false);
+	dropZone.addEventListener('drop', handleFileSelect, false);
 }
 
 function addNode(){
@@ -94,6 +98,103 @@ function updateNode(){
 			mgdb.updateAtomElement(nl[i], retv);
 		}
 	}
+}
+
+function splitByLength(str, length) {
+    var resultArr = [];
+    if (!str || !length || length < 1) {
+        return resultArr;
+    }
+    var index = 0;
+    var start = index;
+    var end = start + length;
+    while (start < str.length) {
+        resultArr[index] = str.substring(start, end);
+        index++;
+        start = end;
+        end = start + length;
+    }
+    return resultArr;
+}
+
+// http://www.html5rocks.com/ja/tutorials/file/dndfiles/
+function handleFileSelect(evt){
+	evt.stopPropagation();
+	evt.preventDefault();
+
+	var files = evt.dataTransfer.files; // FileList object.
+	
+	// files is a FileList of File objects. List some properties.
+	var output = [];
+	for(var i = 0, f; f = files[i]; i++){
+		var r = new FileReader();
+		r.onload = (function(file){
+			return function(e){
+				var list = r.result.split("\n");
+				var strRep = "";
+				for(var k = 0; k < list.length; k++){
+					var splist = list[k].split(" ");
+					if(splist[1] === "3"){
+						// String
+						var s = "#" + UUID.convertFromHexString(splist[0]);
+						var sblist = splitByLength(splist[3], 2);
+						var ss = "";
+						var sslen = parseInt(splist[2]) - 1;
+						for(var t = 0; t < sslen; t++){
+							ss += String.fromCharCode(parseInt(sblist[t], 16));
+						}
+						s += " " + encodeURIComponent(ss);
+						strRep += s + "\n";
+					} else if(splist[1] === "4"){
+						// Integer
+						var s = "#" + UUID.convertFromHexString(splist[0]) +
+						 " " + encodeURIComponent(parseInt(splist[3]))
+						strRep += s + "\n";
+					}
+					
+				}
+				for(var k = 0; k < list.length; k++){
+					var splist = list[k].split(" ");
+					if(splist[1] === "1"){
+						var idList = [];
+						idList[0] = UUID.convertFromHexString(splist[0]);
+						idList[1] = UUID.convertFromHexString(splist[3]);
+						idList[2] = UUID.convertFromHexString(splist[4]);
+						idList[3] = UUID.convertFromHexString(splist[2]);
+						for(var t = 1; t < 4; t++){
+							if(!mgdb.getElementByID(idList[t])){
+								var s = "#" + idList[t] + "  ";
+								strRep += s + "\n";
+							}
+						}
+						var s = "$" + idList[0] +
+							" #" + idList[1] + 
+							" #" + idList[2] +
+							" #" + idList[3]
+							strRep += s + "\n";
+					}
+					
+				}
+				var nslist = strRep.split("\n");
+				var nlist = [];
+				for(var k = 0; k < nslist.length; k++){
+					nlist[k] = mgdb.addElementFromStringRepresentation(nslist[k]);
+					console.log(mgdb.getElementByID(nlist[k]));
+				}
+/*
+				console.log(strRep);
+				console.log(nlist);
+*/
+			}
+		})(f);
+		r.readAsText(f);
+	}
+}
+
+function handleDragOver(evt){
+	evt.stopPropagation();
+	evt.preventDefault();
+	evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
 }
 
 </script>

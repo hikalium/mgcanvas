@@ -1,3 +1,8 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 ;
 Array.prototype.removeAllObject = function (anObject) {
     //Array中にある全てのanObjectを削除し、空いた部分は前につめる。
@@ -1081,7 +1086,7 @@ var MGCanvas = (function () {
         return 0;
     };
     return MGCanvas;
-})();
+}());
 var MGDatabase = (function () {
     //
     function MGDatabase() {
@@ -1164,10 +1169,10 @@ var MGDatabase = (function () {
             // Edge
             t = new MGDatabaseRelationElement();
         }
-        if (t) {
-            t.loadStringRepresentation(str);
-            this.addElement(t);
-        }
+        if (!t)
+            return null;
+        t.loadStringRepresentation(str);
+        return this.addElement(t);
     };
     //
     //
@@ -1180,9 +1185,9 @@ var MGDatabase = (function () {
     //
     MGDatabase.prototype.getElementByID = function (eid) {
         // retv: element instance or false
-        if (eid == UUID.nullUUID) {
-            return false;
-        }
+        //if(eid == UUID.nullUUID){
+        //	return false;
+        //}
         return this.elementList.includes(eid, this.fEqualTo_elementList_elementID);
     };
     MGDatabase.prototype.getElementByContents = function (contents) {
@@ -1191,9 +1196,11 @@ var MGDatabase = (function () {
     };
     MGDatabase.prototype.getListOfRelationConnectedWithElementID = function (eid) {
         var retv;
-        if (eid == UUID.nullUUID) {
+        /*
+        if(eid == UUID.nullUUID){
             return new Array();
         }
+        */
         //
         retv = this.relationList.getAllMatched(eid, function (r) {
             return r.elementIDList.includes(eid);
@@ -1277,7 +1284,7 @@ var MGDatabase = (function () {
         this.relationList = new Array();
     };
     return MGDatabase;
-})();
+}());
 var MGDatabaseAtomElement = (function () {
     //
     function MGDatabaseAtomElement(contents) {
@@ -1309,7 +1316,7 @@ var MGDatabaseAtomElement = (function () {
         this.contents = e.contents;
     };
     return MGDatabaseAtomElement;
-})();
+}());
 var MGDatabaseRelationElement = (function () {
     //
     function MGDatabaseRelationElement(typeID, eIDList) {
@@ -1353,6 +1360,7 @@ var MGDatabaseRelationElement = (function () {
             }
             this.elementIDList[i] = UUID.verifyUUID(str.substr(p, 32 + 4));
         }
+        console.log("loaded");
         return this.elementID;
     };
     MGDatabaseRelationElement.prototype.getStringRepresentation = function () {
@@ -1377,7 +1385,7 @@ var MGDatabaseRelationElement = (function () {
         this.elementIDList = e.elementIDList.copy();
     };
     return MGDatabaseRelationElement;
-})();
+}());
 var MGDatabaseQuery = (function () {
     function MGDatabaseQuery(db, domain) {
         this.nextIndex = 0;
@@ -1413,12 +1421,7 @@ var MGDatabaseQuery = (function () {
         return false;
     };
     return MGDatabaseQuery;
-})();
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+}());
 var MGEdge = (function (_super) {
     __extends(MGEdge, _super);
     //
@@ -1536,6 +1539,8 @@ var MGEdge = (function (_super) {
     MGEdge.prototype.applySpringForce = function (basePos, targetElement) {
         var cl, cf, u;
         //
+        if (!targetElement || !basePos)
+            return;
         cl = basePos.getVectorTo(targetElement.position).getVectorLength();
         cf = (this.naturalLength - cl) * this.springRate;
         u = targetElement.position.getUnitVectorTo(basePos).getAdjustedVector(-cf);
@@ -1570,6 +1575,8 @@ var MGEdge = (function (_super) {
             ctx.MGC_drawArrowLine(p, p.getCompositeVector(l));
         }
         else if (iLen == 1) {
+            if (!n[0])
+                return;
             l = this.position.getVectorTo(n[0].position);
             l = l.getAdjustedVector(l.getVectorLength() - n[0].size);
             p = this.position;
@@ -1615,7 +1622,7 @@ var MGEdge = (function (_super) {
         return g;
     };
     return MGEdge;
-})(MGDatabaseRelationElement);
+}(MGDatabaseRelationElement));
 // Nodeが保存すべき情報
 // this.nodeid
 // this.contents
@@ -1637,10 +1644,11 @@ var MGNode = (function (_super) {
         //
         this.size = 10; // radius
         this.frictionFactor = 0.005;
+        //frictionFactor: number			= 0.05;
         this.isAnchor = false;
         this.isSelected = false;
         this.edgeCache = new Array();
-        this.needsUpdateEdgeCache = false;
+        this.needsUpdateEdgeCache = true;
         // Kinetic attributes
         this.position = new Vector2D(Math.random() * 64 - 32, Math.random() * 64 - 32);
         this.velocity = new Vector2D(Math.random() * 2 - 1, Math.random() * 2 - 1);
@@ -1774,7 +1782,7 @@ var MGNode = (function (_super) {
         this.contextMenu.origin.y = this.position.y;
     };
     return MGNode;
-})(MGDatabaseAtomElement);
+}(MGDatabaseAtomElement));
 var Rectangle2D = (function () {
     function Rectangle2D(x, y, w, h) {
         this.origin = new Vector2D(x, y);
@@ -1786,7 +1794,7 @@ var Rectangle2D = (function () {
             (this.origin.y <= p.y) && (p.y <= this.origin.y + this.size.y);
     };
     return Rectangle2D;
-})();
+}());
 //
 // UUID
 //
@@ -1902,7 +1910,7 @@ var UUID = (function () {
     };
     UUID.nullUUID = "00000000-0000-0000-0000-000000000000";
     return UUID;
-})();
+}());
 //
 // Vector2D
 //
@@ -2053,7 +2061,7 @@ var Vector2D = (function () {
         return n;
     };
     return Vector2D;
-})();
+}());
 var CanvasUIManager = (function () {
     function CanvasUIManager(ctx) {
         this.children = new Array();
@@ -2078,7 +2086,7 @@ var CanvasUIManager = (function () {
         }
     };
     return CanvasUIManager;
-})();
+}());
 var CanvasUISheet = (function (_super) {
     __extends(CanvasUISheet, _super);
     function CanvasUISheet() {
@@ -2124,7 +2132,7 @@ var CanvasUISheet = (function (_super) {
         }
     };
     return CanvasUISheet;
-})(Rectangle2D);
+}(Rectangle2D));
 var CanvasUIButton = (function (_super) {
     __extends(CanvasUIButton, _super);
     //
@@ -2160,7 +2168,7 @@ var CanvasUIButton = (function (_super) {
         }
     };
     return CanvasUIButton;
-})(CanvasUISheet);
+}(CanvasUISheet));
 var MGProlog = (function () {
     //
     function MGProlog(db) {
@@ -2178,7 +2186,7 @@ var MGProlog = (function () {
         }
     };
     return MGProlog;
-})();
+}());
 /*
 class RPNOperator
 {
