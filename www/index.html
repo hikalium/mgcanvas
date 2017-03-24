@@ -29,6 +29,7 @@ onload = function() {
 	addEvent(window, "resize", resizef);
 	resizef();
 	//
+/*
 	mgdb.addAtom("A");
 	mgdb.addAtom("B");
 	mgdb.addAtom("C");
@@ -37,6 +38,7 @@ onload = function() {
 	mgdb.addAtom("F");
 	mgdb.addAtom("G");
 	mgdb.addAtom("H");
+*/
 	//
 	var commandBox = document.getElementById("commandBox");
 	commandBox.onkeydown = function(e){
@@ -69,6 +71,12 @@ onload = function() {
 	var dropZone = commandBox;
 	dropZone.addEventListener('dragover', handleDragOver, false);
 	dropZone.addEventListener('drop', handleFileSelect, false);
+	// search box
+	var searchBox = document.getElementById("searchBox");
+	var searchButton = document.getElementById("searchButton");
+	searchButton.onclick = function(){
+		mgc.focusToElementByContents(searchBox.value);
+	}
 }
 
 function addNode(){
@@ -207,8 +215,8 @@ function handleDragOver(evt){
 		</div>
 		<div>
 			<form class="navbar-form navbar-left" role="search" onsubmit="return false;">
-				<input type="text" class="form-control" placeholder="Search Node or Edge">
-				<button class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Search</button>
+				<input id="searchBox" type="text" class="form-control" placeholder="Search Node">
+				<button id="searchButton" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Search</button>
 			</form>
 			<button class="btn btn-default navbar-btn" onclick="mgc.zoomIn();"><span class="glyphicon glyphicon-zoom-in"></span></button>
 			<button class="btn btn-default navbar-btn" onclick="mgc.zoomOut();"><span class="glyphicon glyphicon-zoom-out"></span></button>

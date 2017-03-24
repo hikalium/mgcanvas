@@ -23,11 +23,13 @@ class MGNode extends MGDatabaseAtomElement implements MGGraphElement
 	size: number = 10;		// radius
 	mass: number;
 	frictionFactor: number			= 0.005;
+	maxVelocity: number				= 500;
 	//frictionFactor: number			= 0.05;
 	isAnchor: boolean				= false;
 	isSelected: boolean				= false;
 	edgeCache: Array<any>			= new Array();
 	needsUpdateEdgeCache: boolean	= true;
+	ignoreContentsList = ["NV_OpList"];
 	//
 	contextMenu: CanvasUISheet;
 	//contextMenuRect: Rectangle2D		= new Rectangle2D(0, 0, 200, 100);
@@ -49,6 +51,7 @@ class MGNode extends MGDatabaseAtomElement implements MGGraphElement
 	//
 	draw()
 	{
+		if(this.isIgnored()) return;
 		var ctx: CanvasRenderingContext2D = this.env.context;
 		ctx.lineWidth = this.lineWidth;
 		ctx.fillStyle = this.fillStyle;
@@ -66,16 +69,18 @@ class MGNode extends MGDatabaseAtomElement implements MGGraphElement
 		}
 		
 		// for Debug
+			/*
 		var pTo: Vector2D;
 		ctx.strokeStyle = "rgba(255, 183, 19, 0.5)";
 		pTo = this.position.getCompositeVector(this.velocity.getVectorScalarMultiplied(100));
 		ctx.MGC_drawArrowLine(this.position, pTo);
-		
+			 */
 		// context menu
 		this.updateContextMenu();
 	}
 	tick()
 	{
+		if(this.isIgnored()) return;
 		var u: Vector2D;
 		var l: number;
 		if(this.env.grabbedNode === this){
@@ -95,6 +100,10 @@ class MGNode extends MGDatabaseAtomElement implements MGGraphElement
 		this.velocity.x += this.currentForce.x / this.mass;
 		this.velocity.y += this.currentForce.y / this.mass;
 		this.currentForce.setComponent(0, 0);
+		this.velocity.x = Math.min(this.velocity.x, this.maxVelocity);
+		this.velocity.y = Math.min(this.velocity.y, this.maxVelocity);
+		this.velocity.x = Math.max(this.velocity.x, -this.maxVelocity);
+		this.velocity.y = Math.max(this.velocity.y, -this.maxVelocity);
 		if(!this.isAnchor){
 			this.position.x += this.velocity.x;
 			this.position.y += this.velocity.y;
@@ -177,6 +186,9 @@ class MGNode extends MGDatabaseAtomElement implements MGGraphElement
 		//
 		this.contextMenu.origin.x = this.position.x;
 		this.contextMenu.origin.y = this.position.y;
+	}
+	isIgnored(){
+		return this.ignoreContentsList.includes(this.contents);
 	}
 	/*
 	drawContextMenu()

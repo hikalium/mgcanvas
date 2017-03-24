@@ -15,13 +15,14 @@ class MGEdge extends MGDatabaseRelationElement implements MGGraphElement
 	lineWidth: number				= 2;
 	isSelected: boolean				= false;
 	isAnchor: boolean				= false;
-	frictionFactor: number			= 0.005;
+	frictionFactor: number			= 0.015;
 	size: number					= 8;
 	needsUpdateEdgeCache: boolean	= false;
 	typeElementCache: MGDatabaseElement;
 	fillStyle: string;
 	strokeStyle: string;
 	mass: number;
+	ignoreDescriptionList = ["type"];
 	//
 	env: MGCanvas;
 	//
@@ -41,6 +42,7 @@ class MGEdge extends MGDatabaseRelationElement implements MGGraphElement
 	//
 	draw()
 	{
+		if(this.isIgnored()) return;
 		var ctx = this.env.context;
 		//
 		ctx.lineWidth = this.lineWidth;
@@ -67,6 +69,7 @@ class MGEdge extends MGDatabaseRelationElement implements MGGraphElement
 	}
 	tick()
 	{
+		if(this.isIgnored()) return;
 		this.tick_node();
 		this.tick_connection();
 	}
@@ -218,5 +221,18 @@ class MGEdge extends MGDatabaseRelationElement implements MGGraphElement
 		g.y /= iLen;
 		
 		return g;
+	}
+	isIgnored()
+	{
+		if(this.typeElementCache instanceof MGDatabaseAtomElement &&
+			this.ignoreDescriptionList.includes((<MGDatabaseAtomElement>this.typeElementCache).contents)){
+			return true;
+		}
+		var el: Array<MGGraphElement> = this.elementCache;
+		for(var i = 0; i < el.length; i++){
+			if(el[i].isIgnored()) return true;
+		}
+		
+		return false;
 	}
 }

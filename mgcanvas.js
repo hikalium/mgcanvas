@@ -1085,6 +1085,21 @@ var MGCanvas = (function () {
         this.context.scale(this.currentScale, this.currentScale);
         return 0;
     };
+    MGCanvas.prototype.focusToElementByContents = function (contents) {
+        // 重心を求めて、それを表示オフセットに設定する
+        var g = new Vector2D(0, 0);
+        var p;
+        p = this.db.atomList;
+        for (var i = 0, iLen = p.length; i < iLen; i++) {
+            if (p[i].contents == contents) {
+                g.x = p[i].position.x;
+                g.y = p[i].position.y;
+            }
+        }
+        this.positionOffset.x = -g.x;
+        this.positionOffset.y = -g.y;
+        //this.isEnabledAutomaticTracking = true;
+    };
     return MGCanvas;
 }());
 var MGDatabase = (function () {
@@ -1439,9 +1454,10 @@ var MGEdge = (function (_super) {
         this.lineWidth = 2;
         this.isSelected = false;
         this.isAnchor = false;
-        this.frictionFactor = 0.005;
+        this.frictionFactor = 0.015;
         this.size = 8;
         this.needsUpdateEdgeCache = false;
+        this.ignoreDescriptionList = ["type"];
         // Kinetic attributes
         this.position = new Vector2D(Math.random() * 64 - 32, Math.random() * 64 - 32); // [px]
         this.velocity = new Vector2D(0, 0); // [px / tick]
@@ -1452,6 +1468,8 @@ var MGEdge = (function (_super) {
     }
     //
     MGEdge.prototype.draw = function () {
+        if (this.isIgnored())
+            return;
         var ctx = this.env.context;
         //
         ctx.lineWidth = this.lineWidth;
@@ -1478,6 +1496,8 @@ var MGEdge = (function (_super) {
         ctx.MGC_drawArrowLine(this.position, pTo);
     };
     MGEdge.prototype.tick = function () {
+        if (this.isIgnored())
+            return;
         this.tick_node();
         this.tick_connection();
     };
@@ -1621,6 +1641,18 @@ var MGEdge = (function (_super) {
         g.y /= iLen;
         return g;
     };
+    MGEdge.prototype.isIgnored = function () {
+        if (this.typeElementCache instanceof MGDatabaseAtomElement &&
+            this.ignoreDescriptionList.includes(this.typeElementCache.contents)) {
+            return true;
+        }
+        var el = this.elementCache;
+        for (var i = 0; i < el.length; i++) {
+            if (el[i].isIgnored())
+                return true;
+        }
+        return false;
+    };
     return MGEdge;
 }(MGDatabaseRelationElement));
 // Nodeが保存すべき情報
@@ -1644,11 +1676,13 @@ var MGNode = (function (_super) {
         //
         this.size = 10; // radius
         this.frictionFactor = 0.005;
+        this.maxVelocity = 500;
         //frictionFactor: number			= 0.05;
         this.isAnchor = false;
         this.isSelected = false;
         this.edgeCache = new Array();
         this.needsUpdateEdgeCache = true;
+        this.ignoreContentsList = ["NV_OpList"];
         // Kinetic attributes
         this.position = new Vector2D(Math.random() * 64 - 32, Math.random() * 64 - 32);
         this.velocity = new Vector2D(Math.random() * 2 - 1, Math.random() * 2 - 1);
@@ -1659,6 +1693,8 @@ var MGNode = (function (_super) {
     }
     //
     MGNode.prototype.draw = function () {
+        if (this.isIgnored())
+            return;
         var ctx = this.env.context;
         ctx.lineWidth = this.lineWidth;
         ctx.fillStyle = this.fillStyle;
@@ -1676,14 +1712,18 @@ var MGNode = (function (_super) {
             ctx.MGC_drawText(this.contents.toString(), this.position.x + this.size, this.position.y + this.size);
         }
         // for Debug
-        var pTo;
-        ctx.strokeStyle = "rgba(255, 183, 19, 0.5)";
-        pTo = this.position.getCompositeVector(this.velocity.getVectorScalarMultiplied(100));
-        ctx.MGC_drawArrowLine(this.position, pTo);
+        /*
+    var pTo: Vector2D;
+    ctx.strokeStyle = "rgba(255, 183, 19, 0.5)";
+    pTo = this.position.getCompositeVector(this.velocity.getVectorScalarMultiplied(100));
+    ctx.MGC_drawArrowLine(this.position, pTo);
+         */
         // context menu
         this.updateContextMenu();
     };
     MGNode.prototype.tick = function () {
+        if (this.isIgnored())
+            return;
         var u;
         var l;
         if (this.env.grabbedNode === this) {
@@ -1703,6 +1743,10 @@ var MGNode = (function (_super) {
         this.velocity.x += this.currentForce.x / this.mass;
         this.velocity.y += this.currentForce.y / this.mass;
         this.currentForce.setComponent(0, 0);
+        this.velocity.x = Math.min(this.velocity.x, this.maxVelocity);
+        this.velocity.y = Math.min(this.velocity.y, this.maxVelocity);
+        this.velocity.x = Math.max(this.velocity.x, -this.maxVelocity);
+        this.velocity.y = Math.max(this.velocity.y, -this.maxVelocity);
         if (!this.isAnchor) {
             this.position.x += this.velocity.x;
             this.position.y += this.velocity.y;
@@ -1780,6 +1824,9 @@ var MGNode = (function (_super) {
         //
         this.contextMenu.origin.x = this.position.x;
         this.contextMenu.origin.y = this.position.y;
+    };
+    MGNode.prototype.isIgnored = function () {
+        return this.ignoreContentsList.includes(this.contents);
     };
     return MGNode;
 }(MGDatabaseAtomElement));

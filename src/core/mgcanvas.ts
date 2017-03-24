@@ -4,6 +4,7 @@ interface MGGraphElement extends MGDatabaseElement
 	position: Vector2D;		// [px]
 	velocity: Vector2D;		// [px / tick]
 	currentForce: Vector2D;	// [px / tick^2]
+	isIgnored(): boolean;
 }
 
 enum CallbackEventID
@@ -543,5 +544,23 @@ class MGCanvas
 		this.context.scale(this.currentScale, this.currentScale);
 
 		return 0;
+	}
+	focusToElementByContents(contents: string)
+	{
+		// 重心を求めて、それを表示オフセットに設定する
+		var g: Vector2D = new Vector2D(0, 0);
+		var p: Array<MGNode>;
+		p = <Array<MGNode>>this.db.atomList;
+		for(var i = 0, iLen = p.length; i < iLen; i++){
+			if(p[i].contents == contents){
+				g.x = p[i].position.x;
+				g.y = p[i].position.y;
+			}
+		}
+
+		this.positionOffset.x = -g.x;
+		this.positionOffset.y = -g.y;
+
+		//this.isEnabledAutomaticTracking = true;
 	}
 }
