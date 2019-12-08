@@ -1,8 +1,16 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 ;
 Array.prototype.removeAllObject = function (anObject) {
     //Array中にある全てのanObjectを削除し、空いた部分は前につめる。
@@ -578,7 +586,7 @@ var CallbackEventID;
     CallbackEventID[CallbackEventID["NodeSelectionChanged"] = 1] = "NodeSelectionChanged";
     CallbackEventID[CallbackEventID["EdgeSelectionChanged"] = 2] = "EdgeSelectionChanged";
 })(CallbackEventID || (CallbackEventID = {}));
-var MGCanvas = (function () {
+var MGCanvas = /** @class */ (function () {
     /*
         function(eventID, [args])
         NodeSelectionChanged			function(1, [newNodeInstance, nodeSelectionList]){};
@@ -1102,7 +1110,7 @@ var MGCanvas = (function () {
     };
     return MGCanvas;
 }());
-var MGDatabase = (function () {
+var MGDatabase = /** @class */ (function () {
     //
     function MGDatabase() {
         this.saveDataPrefix = "mgdbdata";
@@ -1300,7 +1308,7 @@ var MGDatabase = (function () {
     };
     return MGDatabase;
 }());
-var MGDatabaseAtomElement = (function () {
+var MGDatabaseAtomElement = /** @class */ (function () {
     //
     function MGDatabaseAtomElement(contents) {
         this.contents = contents;
@@ -1332,7 +1340,7 @@ var MGDatabaseAtomElement = (function () {
     };
     return MGDatabaseAtomElement;
 }());
-var MGDatabaseRelationElement = (function () {
+var MGDatabaseRelationElement = /** @class */ (function () {
     //
     function MGDatabaseRelationElement(typeID, eIDList) {
         this.typeElementID = UUID.verifyUUID(typeID);
@@ -1401,7 +1409,7 @@ var MGDatabaseRelationElement = (function () {
     };
     return MGDatabaseRelationElement;
 }());
-var MGDatabaseQuery = (function () {
+var MGDatabaseQuery = /** @class */ (function () {
     function MGDatabaseQuery(db, domain) {
         this.nextIndex = 0;
         this.hasReachedEnd = false;
@@ -1437,34 +1445,36 @@ var MGDatabaseQuery = (function () {
     };
     return MGDatabaseQuery;
 }());
-var MGEdge = (function (_super) {
+var MGEdge = /** @class */ (function (_super) {
     __extends(MGEdge, _super);
     //
     function MGEdge(typeid, elementIDList) {
+        var _this = 
         // e[0]に矢印マークがつく。
         // 時計回りにeは配置される。
-        _super.call(this, typeid, elementIDList);
-        this.StrokeColor_default = "rgba(51, 119, 193, 0.5)";
-        this.StrokeColor_selected = "rgba(255, 0, 0, 1)";
-        this.FillColor_default = "rgba(255, 255, 255, 0);";
+        _super.call(this, typeid, elementIDList) || this;
+        _this.StrokeColor_default = "rgba(51, 119, 193, 0.5)";
+        _this.StrokeColor_selected = "rgba(255, 0, 0, 1)";
+        _this.FillColor_default = "rgba(255, 255, 255, 0);";
         //
-        this.naturalLength = 100;
-        this.springRate = 10;
-        this.elementCache = new Array();
-        this.lineWidth = 2;
-        this.isSelected = false;
-        this.isAnchor = false;
-        this.frictionFactor = 0.015;
-        this.size = 8;
-        this.needsUpdateEdgeCache = false;
-        this.ignoreDescriptionList = ["type"];
+        _this.naturalLength = 100;
+        _this.springRate = 10;
+        _this.elementCache = new Array();
+        _this.lineWidth = 2;
+        _this.isSelected = false;
+        _this.isAnchor = false;
+        _this.frictionFactor = 0.015;
+        _this.size = 8;
+        _this.needsUpdateEdgeCache = false;
+        _this.ignoreDescriptionList = ["type"];
         // Kinetic attributes
-        this.position = new Vector2D(Math.random() * 64 - 32, Math.random() * 64 - 32); // [px]
-        this.velocity = new Vector2D(0, 0); // [px / tick]
-        this.currentForce = new Vector2D(0, 0); // [px / tick^2]
+        _this.position = new Vector2D(Math.random() * 64 - 32, Math.random() * 64 - 32); // [px]
+        _this.velocity = new Vector2D(0, 0); // [px / tick]
+        _this.currentForce = new Vector2D(0, 0); // [px / tick^2]
         //
-        this.strokeStyle = this.StrokeColor_default;
-        this.mass = 10 * 10 * Math.PI;
+        _this.strokeStyle = _this.StrokeColor_default;
+        _this.mass = 10 * 10 * Math.PI;
+        return _this;
     }
     //
     MGEdge.prototype.draw = function () {
@@ -1660,36 +1670,37 @@ var MGEdge = (function (_super) {
 // this.contents
 // this.position
 // this.velocity
-var MGNode = (function (_super) {
+var MGNode = /** @class */ (function (_super) {
     __extends(MGNode, _super);
     //
     function MGNode(contents) {
-        _super.call(this, contents);
-        this.sizebase = 10;
-        this.lineWidth = 2;
-        this.strokeStyle = "rgba(0, 0, 0, 0.75)";
-        this.font = "16px sans-serif";
+        var _this = _super.call(this, contents) || this;
+        _this.sizebase = 10;
+        _this.lineWidth = 2;
+        _this.strokeStyle = "rgba(0, 0, 0, 0.75)";
+        _this.font = "16px sans-serif";
         //
-        this.FillColor_connected = "rgba(255, 255, 255, 0.5)";
-        this.FillColor_noConnection = "rgba(0, 0, 0, 0.5)";
-        this.FillColor_selected = "rgba(255, 0, 0, 1)";
+        _this.FillColor_connected = "rgba(255, 255, 255, 0.5)";
+        _this.FillColor_noConnection = "rgba(0, 0, 0, 0.5)";
+        _this.FillColor_selected = "rgba(255, 0, 0, 1)";
         //
-        this.size = 10; // radius
-        this.frictionFactor = 0.005;
-        this.maxVelocity = 500;
+        _this.size = 10; // radius
+        _this.frictionFactor = 0.005;
+        _this.maxVelocity = 500;
         //frictionFactor: number			= 0.05;
-        this.isAnchor = false;
-        this.isSelected = false;
-        this.edgeCache = new Array();
-        this.needsUpdateEdgeCache = true;
-        this.ignoreContentsList = ["NV_OpList"];
+        _this.isAnchor = false;
+        _this.isSelected = false;
+        _this.edgeCache = new Array();
+        _this.needsUpdateEdgeCache = true;
+        _this.ignoreContentsList = ["NV_OpList"];
         // Kinetic attributes
-        this.position = new Vector2D(Math.random() * 64 - 32, Math.random() * 64 - 32);
-        this.velocity = new Vector2D(Math.random() * 2 - 1, Math.random() * 2 - 1);
-        this.currentForce = new Vector2D(0, 0);
+        _this.position = new Vector2D(Math.random() * 64 - 32, Math.random() * 64 - 32);
+        _this.velocity = new Vector2D(Math.random() * 2 - 1, Math.random() * 2 - 1);
+        _this.currentForce = new Vector2D(0, 0);
         //  Cached data (will be changed frequently)
-        this.mass = this.size * this.size * Math.PI;
-        this.fillStyle = this.FillColor_noConnection;
+        _this.mass = _this.size * _this.size * Math.PI;
+        _this.fillStyle = _this.FillColor_noConnection;
+        return _this;
     }
     //
     MGNode.prototype.draw = function () {
@@ -1830,7 +1841,7 @@ var MGNode = (function (_super) {
     };
     return MGNode;
 }(MGDatabaseAtomElement));
-var Rectangle2D = (function () {
+var Rectangle2D = /** @class */ (function () {
     function Rectangle2D(x, y, w, h) {
         this.origin = new Vector2D(x, y);
         this.size = new Vector2D(w, h);
@@ -1845,7 +1856,7 @@ var Rectangle2D = (function () {
 //
 // UUID
 //
-var UUID = (function () {
+var UUID = /** @class */ (function () {
     function UUID() {
     }
     UUID.verifyUUID = function (uuid) {
@@ -1897,6 +1908,7 @@ var UUID = (function () {
                 tmp |= 0x3f;
             }
             else if (c === 0x3d) {
+                // padding
             }
             else {
                 throw "Invalid Base64 String.";
@@ -1961,7 +1973,7 @@ var UUID = (function () {
 //
 // Vector2D
 //
-var Vector2D = (function () {
+var Vector2D = /** @class */ (function () {
     //
     function Vector2D(x, y) {
         this.x = (x === undefined) ? 0 : x;
@@ -2109,7 +2121,7 @@ var Vector2D = (function () {
     };
     return Vector2D;
 }());
-var CanvasUIManager = (function () {
+var CanvasUIManager = /** @class */ (function () {
     function CanvasUIManager(ctx) {
         this.children = new Array();
         this.context = ctx;
@@ -2134,13 +2146,14 @@ var CanvasUIManager = (function () {
     };
     return CanvasUIManager;
 }());
-var CanvasUISheet = (function (_super) {
+var CanvasUISheet = /** @class */ (function (_super) {
     __extends(CanvasUISheet, _super);
     function CanvasUISheet() {
-        _super.apply(this, arguments);
-        this.children = new Array();
-        this.backgroundColor = "rgba(255, 255, 255, 0.75)";
-        this.borderColor = "rgba(51, 119, 193, 0.5)";
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.children = new Array();
+        _this.backgroundColor = "rgba(255, 255, 255, 0.75)";
+        _this.borderColor = "rgba(51, 119, 193, 0.5)";
+        return _this;
     }
     CanvasUISheet.prototype.draw = function (ctx) {
         var x = this.origin.x;
@@ -2180,17 +2193,18 @@ var CanvasUISheet = (function (_super) {
     };
     return CanvasUISheet;
 }(Rectangle2D));
-var CanvasUIButton = (function (_super) {
+var CanvasUIButton = /** @class */ (function (_super) {
     __extends(CanvasUIButton, _super);
     //
     function CanvasUIButton(s, x, y, w, h, callback) {
-        _super.call(this, x, y, w, h);
-        this.label = "Button";
-        this.fontColor = "rgba(0, 0, 0, 0.75)";
-        this.fontSize = 16;
-        this.font = "'Source Code Pro', source-code-pro";
-        this.label = s;
-        this.callback = callback;
+        var _this = _super.call(this, x, y, w, h) || this;
+        _this.label = "Button";
+        _this.fontColor = "rgba(0, 0, 0, 0.75)";
+        _this.fontSize = 16;
+        _this.font = "'Source Code Pro', source-code-pro";
+        _this.label = s;
+        _this.callback = callback;
+        return _this;
     }
     //
     CanvasUIButton.prototype.draw = function (ctx) {
@@ -2216,7 +2230,7 @@ var CanvasUIButton = (function (_super) {
     };
     return CanvasUIButton;
 }(CanvasUISheet));
-var MGProlog = (function () {
+var MGProlog = /** @class */ (function () {
     //
     function MGProlog(db) {
         var that = this;
