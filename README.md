@@ -8,6 +8,12 @@ mgcanvasはNode-Edge型グラフ構造を容易に編集・表示することを
 ## Usage
 [www/index.html](./www/index.html)をHTML5対応ウェブブラウザで起動するだけです。
 
+## How to builid
+```
+npm install -g typescript
+make
+```
+
 ## Licence
 
 [MIT Licence](https://github.com/tcnksm/tool/blob/master/LICENCE)
