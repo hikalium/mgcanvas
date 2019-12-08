@@ -44,6 +44,43 @@ onload = function() {
     if(mgc.nodeSelectionList.length == 0) return;
 	  inputTargetNodeId.value = mgc.nodeSelectionList[0].elementID;
 	}
+
+  const btnInputAddAutoFill = document.getElementById("btnInputAddAutoFill");
+  const inputAddFuncURL = document.getElementById("inputAddFuncURL");
+  const inputAddFuncFile = document.getElementById("inputAddFuncFile");
+  const inputAddFuncLine = document.getElementById("inputAddFuncLine");
+  const inputAddFuncSrcVersion = document.getElementById("inputAddFuncSrcVersion");
+  btnInputAddAutoFill.onclick = () => {
+    const url = inputAddFuncURL.value;
+    if(url.indexOf("https://elixir.bootlin.com/linux/") === 0) {
+      // ex: https://elixir.bootlin.com/linux/v5.1.8/source/mm/memory.c#L404
+      const fileAndLine = url.substr(url.indexOf("/source/")).split("#");
+      inputAddFuncFile.value = fileAndLine[0];
+      inputAddFuncLine.value = fileAndLine[1].substr(1);
+      inputAddFuncSrcVersion.value = url.substr(0, url.indexOf("/source/")).split("/").splice(-1)[0];
+      return;
+    }
+	}
+  const btnAddFunc = document.getElementById("btnAddFunc");
+  const inputAddFuncSignature = document.getElementById("inputAddFuncSignature");
+  btnAddFunc.onclick = () => {
+    const url = inputAddFuncURL.value;
+    const file = inputAddFuncFile.value;
+    const line = inputAddFuncLine.value;
+    const sig = inputAddFuncSignature.value;
+    const ver = inputAddFuncSrcVersion.value;
+
+	  const funcNodeId = mgdb.addAtom(sig);
+	  const fileNodeId = mgdb.addAtom(file);
+	  const lineNodeId = mgdb.addAtom(line);
+	  const urlNodeId = mgdb.addAtom(url);
+	  const verNodeId = mgdb.addAtom(ver);
+
+    mgdb.addRelation(UUID.nullUUID, [fileNodeId, funcNodeId]);
+    mgdb.addRelation(UUID.nullUUID, [lineNodeId, funcNodeId]);
+    mgdb.addRelation(UUID.nullUUID, [urlNodeId, funcNodeId]);
+    mgdb.addRelation(UUID.nullUUID, [verNodeId, funcNodeId]);
+	}
 }
 
 function addNode(){
@@ -207,6 +244,32 @@ function handleDragOver(evt){
     </span>
     <input id="targetNodeId" type="text" class="form-control" placeholder="Target Node ID">
   </div>
+  <hr>
+  <h1>Add Funcion</h1>
+  <div class="input-group">
+    <span class="input-group-addon" id="basic-addon1">URL</span>
+    <input id="inputAddFuncURL" type="text" class="form-control" placeholder="URL" value="https://elixir.bootlin.com/linux/v5.1.8/source/mm/memory.c#L404">
+    <span class="input-group-btn">
+      <button id="btnInputAddAutoFill" class="btn btn-default" type="button">AutoFill</button>
+    </span>
+  </div>
+  <div class="input-group">
+    <span class="input-group-addon" id="basic-addon1">File</span>
+    <input id="inputAddFuncFile" type="text" class="form-control" placeholder="File">
+  </div>
+  <div class="input-group">
+    <span class="input-group-addon" id="basic-addon1">Line</span>
+    <input id="inputAddFuncLine" type="text" class="form-control" placeholder="Line">
+  </div>
+  <div class="input-group">
+    <span class="input-group-addon" id="basic-addon1">Source Version</span>
+    <input id="inputAddFuncSrcVersion" type="text" class="form-control" placeholder="Version">
+  </div>
+  <div class="input-group">
+    <span class="input-group-addon" id="basic-addon1">Signature</span>
+    <input id="inputAddFuncSignature" type="text" class="form-control" placeholder="Signature" value="int __pte_alloc(struct mm_struct *mm, pmd_t *pmd)">
+  </div>
+  <button id="btnAddFunc" class="btn btn-default">Add</button>
 </div>
 
 </body>
