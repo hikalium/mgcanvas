@@ -81,6 +81,16 @@ onload = function() {
     mgdb.addRelation(UUID.nullUUID, [urlNodeId, funcNodeId]);
     mgdb.addRelation(UUID.nullUUID, [verNodeId, funcNodeId]);
 	}
+  const btnToolbarDownload = document.getElementById("btnToolbarDownload");
+  btnToolbarDownload.onclick = () => {
+    const tzoffset = (new Date()).getTimezoneOffset() * 60 * 1000;
+    const localISOTime = (new Date(Date.now() - tzoffset)).toISOString();
+    const timeStr = localISOTime.split('.')[0].split(':').join('_').split('T').join('_');
+    var link = document.createElement('a');
+    link.download = `mgcanvas_db_${timeStr}.txt`;
+    link.href = mgdb.getURLForDBDataStr();
+    link.click();
+	}
 }
 
 function addNode(){
@@ -136,71 +146,17 @@ function handleFileSelect(evt){
 
 	var files = evt.dataTransfer.files; // FileList object.
 	
-	// files is a FileList of File objects. List some properties.
-	var output = [];
-	for(var i = 0, f; f = files[i]; i++){
-		var r = new FileReader();
-		r.onload = (function(file){
-			return function(e){
-				var list = r.result.split("\n");
-				var strRep = "";
-				for(var k = 0; k < list.length; k++){
-					var splist = list[k].split(" ");
-					if(splist[1] === "3"){
-						// String
-						var s = "#" + UUID.convertFromHexString(splist[0]);
-						var sblist = splitByLength(splist[3], 2);
-						var ss = "";
-						var sslen = parseInt(splist[2]) - 1;
-						for(var t = 0; t < sslen; t++){
-							ss += String.fromCharCode(parseInt(sblist[t], 16));
-						}
-						s += " " + encodeURIComponent(ss);
-						strRep += s + "\n";
-					} else if(splist[1] === "4"){
-						// Integer
-						var s = "#" + UUID.convertFromHexString(splist[0]) +
-						 " " + encodeURIComponent(parseInt(splist[3]))
-						strRep += s + "\n";
-					}
-					
-				}
-				for(var k = 0; k < list.length; k++){
-					var splist = list[k].split(" ");
-					if(splist[1] === "1"){
-						var idList = [];
-						idList[0] = UUID.convertFromHexString(splist[0]);
-						idList[1] = UUID.convertFromHexString(splist[3]);
-						idList[2] = UUID.convertFromHexString(splist[4]);
-						idList[3] = UUID.convertFromHexString(splist[2]);
-						for(var t = 1; t < 4; t++){
-							if(!mgdb.getElementByID(idList[t])){
-								var s = "#" + idList[t] + "  ";
-								strRep += s + "\n";
-							}
-						}
-						var s = "$" + idList[0] +
-							" #" + idList[1] + 
-							" #" + idList[2] +
-							" #" + idList[3]
-							strRep += s + "\n";
-					}
-					
-				}
-				var nslist = strRep.split("\n");
-				var nlist = [];
-				for(var k = 0; k < nslist.length; k++){
-					nlist[k] = mgdb.addElementFromStringRepresentation(nslist[k]);
-					console.log(mgdb.getElementByID(nlist[k]));
-				}
-/*
-				console.log(strRep);
-				console.log(nlist);
-*/
-			}
-		})(f);
-		r.readAsText(f);
-	}
+    // files is a FileList of File objects. List some properties.
+    var output = [];
+  for(var i = 0, f; f = files[i]; i++){
+    var r = new FileReader();
+    r.onload = (function(file){
+      return function(e){
+        mgdb.loadDBDataStr(r.result);
+      }
+    })(f);
+    r.readAsText(f);
+  }
 }
 
 function handleDragOver(evt){
@@ -230,6 +186,7 @@ function handleDragOver(evt){
 			<button class="btn btn-default navbar-btn" onclick="addNode();"><span class="glyphicon glyphicon-plus"></span></button>
 			<button class="btn btn-default navbar-btn" onclick="connectNode();"><span class="glyphicon glyphicon-link"></span></button>
 			<button class="btn btn-default navbar-btn" onclick="updateNode();"><span class="glyphicon glyphicon-pencil"></span></button>
+			<button id="btnToolbarDownload" class="btn btn-default navbar-btn"><span class="glyphicon glyphicon-download-alt"></span></button>
 		</div>
 	</div>
 </div>
